@@ -6,27 +6,15 @@ import {
 } from 'reactstrap';
 import cs from './HomePage.pcss';
 
-// const placeholder = document.createElement('li');
+const placeholder = document.createElement('li');
+placeholder.className = cs.placeholder;
 
 class HomePage extends React.Component {
   constructor() {
     super();
     this.state = {
       value: '',
-      items: [
-        {
-          name: 'John',
-          id: 1517851856969,
-        },
-        {
-          name: 'Poul',
-          id: 1517851856964,
-        },
-        {
-          name: 'Lili',
-          id: 1517851856968,
-        },
-      ],
+      items: [],
     };
   }
   hendleChange(event) {
@@ -38,6 +26,7 @@ class HomePage extends React.Component {
       itemArray.unshift({
         name: this.state.value,
         id: Date.now(),
+        randomColor: `rgb( ${Math.floor(Math.random() * 256)} , ${Math.floor(Math.random() * 256)} , ${Math.floor(Math.random() * 256)} )`,
       });
     }
     this.setState({ value: '' });
@@ -58,6 +47,8 @@ class HomePage extends React.Component {
   }
   dragEnd() {
     this.dragged.style.display = 'block';
+    this.dragged.parentNode.removeChild(placeholder);
+
     const from = Number(this.dragged.dataset.id);
     let to = Number(this.over.dataset.id);
     const data = this.state.items;
@@ -68,31 +59,41 @@ class HomePage extends React.Component {
   dragOver(e) {
     e.preventDefault();
     this.dragged.style.display = 'none';
+    if (e.target.className === cs.placeholder) return;
     this.over = e.target;
+    if (e.target.hasAttribute('data-id')) {
+      e.target.parentNode.insertBefore(placeholder, e.target);
+    }
+  }
+
+  renderItems() {
+    const map = (item, i) => {
+      return (
+        <li
+          data-id={i}
+          style={{ backgroundColor: item.randomColor }}
+          key={item.id}
+          draggable="true"
+          onDragEnd={this.dragEnd.bind(this)}
+          onDragStart={this.dragStart.bind(this)}
+        >
+          <p>{item.name}</p>
+          <span
+            onClick={this.del.bind(this, item)}
+            role="presentation"
+          >x</span></li>
+      );
+    };
+
+    return this.state.items.map(map);
   }
 
   render() {
-    const updatedList = this.state.items.filter((item) => {
-      return item.name.toLowerCase().search(
-        this.state.value.toLowerCase()) !== -1;
-    });
-    const listing = updatedList.map((item, i) =>
-      (<li
-        data-id={i}
-        style={{ backgroundColor: `rgb( ${Math.floor(Math.random() * 256)} , ${Math.floor(Math.random() * 256)} , ${Math.floor(Math.random() * 256)} )` }}
-        key={item.id}
-        draggable="true"
-        onDragEnd={this.dragEnd.bind(this)}
-        onDragStart={this.dragStart.bind(this)}
-      >
-        <p>id: {i}</p>
-        <p>Name: {item.name}</p>
-        <p>Case: {item.id}</p>
-        <span
-          onClick={this.del.bind(this, item)}
-          role="presentation"
-        >x</span></li>),
-    );
+    const container = this.state.items.length >= 7 ?
+                      this.renderItems() :
+      (<div className={cs.contentText}>
+        Add at least 7 items to able to view and sort them.
+      </div>);
 
     return (
       <div>
@@ -120,7 +121,7 @@ class HomePage extends React.Component {
                   className={cs.ul}
                   onDragOver={this.dragOver.bind(this)}
                 >
-                  {listing}
+                  {container}
                 </ul>
               </div>
             </Col>
