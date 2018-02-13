@@ -1,8 +1,8 @@
 import { combineReducers } from 'redux';
 import { reducer as reduxFormReducer } from 'redux-form';
-import counter from './counter';
+import items from './items';
 
 export default combineReducers({
   form: reduxFormReducer,
-  counter,
+  items,
 });

@@ -1,9 +1,7 @@
 import React from 'react';
-import {
- Container,
-  Col,
-  Row,
-} from 'reactstrap';
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
+import { Container, Col, Row } from 'reactstrap';
 import cs from './HomePage.pcss';
 
 const placeholder = document.createElement('li');
@@ -21,7 +19,7 @@ class HomePage extends React.Component {
     this.setState({ value: event.target.value });
   }
   addText(e) {
-    const itemArray = this.state.items;
+    const itemArray = this.props.items;
     if (this.state.value !== '') {
       itemArray.unshift({
         name: this.state.value,
@@ -29,13 +27,14 @@ class HomePage extends React.Component {
         randomColor: `rgb( ${Math.floor(Math.random() * 256)} , ${Math.floor(Math.random() * 256)} , ${Math.floor(Math.random() * 256)} )`,
       });
     }
+    this.props.dispatchText();
     this.setState({ value: '' });
     this.setState({ items: itemArray });
     e.preventDefault();
   }
 
   del(e) {
-    const array = this.state.items;
+    const array = this.props.items;
     const index = array.indexOf(e);
     array.splice(index, 1);
     this.setState({ items: array });
@@ -51,7 +50,7 @@ class HomePage extends React.Component {
 
     const from = Number(this.dragged.dataset.id);
     let to = Number(this.over.dataset.id);
-    const data = this.state.items;
+    const data = this.props.items;
     if (from < to) to -= 1;
     data.splice(to, 0, data.splice(from, 1)[0]);
     this.setState({ items: data });
@@ -81,15 +80,16 @@ class HomePage extends React.Component {
           <span
             onClick={this.del.bind(this, item)}
             role="presentation"
-          >x</span></li>
+          >x</span>
+        </li>
       );
     };
 
-    return this.state.items.map(map);
+    return this.props.items.map(map);
   }
 
   render() {
-    const container = this.state.items.length >= 7 ?
+    const container = this.props.items.length >= 1 ?
                       this.renderItems() :
       (<div className={cs.contentText}>
         Add at least 7 items to able to view and sort them.
@@ -131,5 +131,29 @@ class HomePage extends React.Component {
     );
   }
 }
+HomePage.propTypes = {
+  dispatchText: PropTypes.func.isRequired,
+  items: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired,
+    randomColor: PropTypes.string.isRequired,
+  }).isRequired).isRequired,
+};
 
-export default HomePage;
+const mapDispatchToProps = (dispatch) => {
+  return {
+    dispatchText: () => {
+      dispatch({ type: 'ADD_ITEMS' });
+    },
+  };
+};
+
+const mapStateToProps = (state) => {
+  return {
+    items: state.items,
+  };
+};
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(HomePage);
